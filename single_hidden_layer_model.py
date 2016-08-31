@@ -4,6 +4,9 @@ import tensorflow as tf
 import numpy as np
 import math
 
+import matplotlib
+matplotlib.use('TkAgg')
+
 %autoindent
 try:
     from tqdm import tqdm
@@ -48,6 +51,7 @@ onehot = to_onehot(labels)
 indices = np.random.permutation(train.shape[0])
 valid_cnt = int(train.shape[0] * 0.1)
 test_idx, training_idx = indices[:valid_cnt], indices[valid_cnt:]
+test, train = train[test_idx, :], train[training_idx, :]
 onehot_test, onehot_train = onehot[test_idx, :], onehot[training_idx, :]
 
 sess = tf.InteractiveSession()
@@ -99,4 +103,24 @@ for i in tqdm(range(epochs), ascii=True):
         A = accuracy.eval(feed_dict={x:test.reshape([-1,1296]), y_: onehot_test})
         test_acc[i//10] = A
     train_step.run(feed_dict={x:train.reshape([-1,1296]), y_: onehot_train})
+
+# Plot the accuracy curves
+plt.figure(figsize=(6,6))
+plt.plot(train_acc, 'bo')
+plt.plot(test_acc, 'rx')
+
+# Look at the final testing confusion matrix
+pred = np.argmax(y.eval(feed_dict={x: test.reshape([-1,1296]), y_: onehot_test}), axis = 1)
+conf = np.zeros([5,5])
+for p, t in zip(pred, np.argmax(onehot_test, axis=1)):
+    conf[t,p] += 1
+
+plt.matshow(conf)
+plt.colorbar()
+
+# Let's look at a subplot of some weights
+f, plts = plt.subplots(4,8, sharex = True)
+for i in range(32):
+    plts[i//8, i%8].pcolormesh(W1.eval()[:,i].reshape([36,36]))
+
 
