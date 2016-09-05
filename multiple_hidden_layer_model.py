@@ -122,5 +122,27 @@ plt.plot(test_acc, 'rx')
 
 # Look at the final testing confusion matrix
 pred = np.argmax(y.eval(feed_dict={x: test.reshape([-1,1296]), y_: onehot_test}), axis = 1)
+conf = np.zeros([5,5])
+for p, t in zip(pred,np.argmax(onehot_test, axis = 1)):
+    conf[t,p] += 1
+plt.matshow(conf)
+plt.colorbar()
+
+# Let's look at a subplot of some weights
+plt.figure(figsize=(6,6))
+f, plts = plt.subplots(4,8, sharex = True)
+for i in range(32):
+    plts[i//8, i%8].matshow(W1.eval()[:, i].reshape([36,36]))
+
+# Examine the output weights
+plt.matshow(W3.eval())
+plt.colorbar()
+
+# Examine the output weights
+saver = tf.train.Saver()
+saver.save(sess, "mpl.ckpt")
+
+# Restore
+saver.restore(sess, "mlp.ckpt")
 
 
