@@ -70,5 +70,57 @@ h1 = tf.sigmoid(tf.matmul(x, W1) + b1)
 # Hidden Layer 2
 num_hidden2 = 32
 W2 = tf.Variable(tf.truncated_normal([num_hidden1, num_hidden2], stddev=2./math.sqrt(num_hidden1)))
+b2 = tf.Variable(tf.constant(0.2, shape=[num_hidden2]))
+h2 = tf.sigmoid(tf.matmul(h1,W2) + b2)
+
+# Output Layer
+W3 = tf.Variable(tf.truncated_normal([num_hidden2, 5], stddev=1./math.sqrt(5)))
+
+b3 = tf.Variable(tf.constant(0.1,shape=[5]))
+
+
+# Just initialize
+sess.run(tf.initialize_all_variables())
+
+# Define model
+y = tf.nn.softmax(tf.matmul(h2,W3) + b3)
+
+### End model specification, begin training code
+
+# Climb on cross-entropy
+
+cross_entropy = tf.reduce_mean(
+    tf.nn.softmax_cross_entropy_with_logits(y + 1e-50, y_)
+)
+
+# How we train
+train_step = tf.train.GradientDescentOptimizer(0.01).minimize(cross_entropy)
+
+# Define accuracy
+correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
+
+# Actually train
+
+epochs = 25000
+train_acc = np.zeros(epochs//10)
+test_acc = np.zeros(epochs//10)
+for i in tqdm(range(epochs), ascii=True):
+    if i % 10 == 0: #Record summary data, and the accuracy
+        # Check accuracy on train set
+        A = accuracy.eval(feed_dict={x:train.reshape([-1,1296]), y_: onehot_train})
+        train_acc[i//10] = A
+        # And now the validation set
+        A = accuracy.eval(feed_dict={x: test.reshape([-1,1296]), y_: onehot_test})
+        test_acc[i//10] = A
+    train_step.run(feed_dict={x:train.reshape([-1,1296]), y_: onehot_train})
+
+# Plot the accuracy curves
+plt.figure(figsize=(6,6))
+plt.plot(train_acc, 'bo')
+plt.plot(test_acc, 'rx')
+
+# Look at the final testing confusion matrix
+pred = np.argmax(y.eval(feed_dict={x: test.reshape([-1,1296]), y_: onehot_test}), axis = 1)
 
 
