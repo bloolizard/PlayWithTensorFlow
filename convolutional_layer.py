@@ -66,3 +66,30 @@ plt.colorbar()
 plt.matshow(H[0,:,:,1])
 plt.colorbar()
 
+### Pooling Layer
+# "Max" pooling keeps best of 2x2 square
+# in h1 output
+# kszie defines size of this block
+# 'VALID' padding means incomplete squares are
+# not used
+# Stride of 2x2 means no overlap of 2x2 blocks
+p1 = tf.nn.max_pool(h1, ksize=[1,2,2,1], strides=[1,2,2,1], padding='VALID')
+
+# We automatically determine the size
+p1_size = np.product([s.value for s in p1.get_shape()[1:]])
+
+# Need to flatten convolutional output for use
+# in a dense layer
+# -1 chooses appropriate shape to keep overall
+# size the same
+
+plf = tf.reshape(p1, [-1, p1_size])
+
+# Pooling Layer before flattening
+# Note how it's only 5x5, because we took the
+# best of every 2x2 window
+P = p1.eval(feed_dict = {x: image})
+plt.matshow(P[0,:,:,0])
+plt.colorbar()
+
+
